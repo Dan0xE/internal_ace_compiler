@@ -123,6 +123,9 @@ fn check_git_if_installed() -> bool {
         .arg("--version")
         .output()
         .expect("Failed to execute process");
+    if !output.status.success() {
+        return false;
+    }
 
     if output.status.success() {
         true
