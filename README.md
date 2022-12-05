@@ -1,5 +1,10 @@
 # `Toolbox-powerset (Currently Ace-Validator)`
 
+`notice`: This will be expanded to have a:
+- Blender Plugin Check
+- Git commit toolbox for beginners
+- Tool check
+
 `Toolbox-powerset`, or Ace-Validator, is a project aiming to compile Ace with ease.
 
 ## How do i use it
