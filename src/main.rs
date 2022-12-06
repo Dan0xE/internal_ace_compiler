@@ -13,10 +13,9 @@ fn restart_app() {
     let mut path = current_dir().unwrap();
     path.push("ace.exe");
     let path = path.to_str().unwrap();
-    let result = unsafe { ShellExecuteW(HWND::NULL, "open", path, PWSTR::NULL, PWSTR::NULL, 0) };
+    let result = unsafe { ShellExecuteW(HWND::NULL, "open", path, PWSTR::NULL, PWSTR::NULL, 1) };
     println!("result: {:?}", result);
 
-    //kill current process
     taskkill();
 }
 
@@ -102,35 +101,20 @@ fn install_git() {
 
     if !path.exists() {
         println!("Git not found, installing...");
-        download_to_file("
-            https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe
-        ", "git.exe");
-
-        install_command("git.exe".to_string());
-
-        std::thread::sleep(std::time::Duration::from_secs(60));
-
-        fs::remove_file("git.exe").unwrap();
+        download_to_file("https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe", "git.exe");
+        install_command("git.exe /VERYSILENT /NORESTART /SP- ".to_string());
         restart_app();
     } else {
         println!("Git already installed");
     }
-    //copy file to local path and then install
 }
 
 fn check_git_if_installed() -> bool {
-    let output = Command::new("git")
-        .arg("--version")
-        .output()
-        .expect("Failed to execute process");
-    if !output.status.success() {
-        return false;
-    }
+    let output = Command::new("C:\\Program Files\\Git\\bin\\git.exe").output();
 
-    if output.status.success() {
-        true
-    } else {
-        false
+    match output {
+        Ok(_) => true,
+        Err(_) => false,
     }
 }
 
@@ -181,7 +165,7 @@ fn install_modules() {
     let r = unsafe {
         ShellExecuteW(
             HWND::NULL,
-            "open",
+            "Run ",
             "cmd",
             " /c".to_owned() + " " + "npm install --force",
             PWSTR::NULL,
