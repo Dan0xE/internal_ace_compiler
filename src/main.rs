@@ -102,7 +102,21 @@ fn install_git() {
     if !path.exists() {
         println!("Git not found, installing...");
         download_to_file("https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe", "git.exe");
-        install_command("git.exe /VERYSILENT /NORESTART /SP- ".to_string());
+        windows::initialize_sta().unwrap();
+        let r = unsafe {
+            ShellExecuteW(
+            HWND::NULL,
+            "open",
+            "cmd",
+            " /c".to_owned() + " " + "git.exe /SILENT /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTARTAPPLICATIONS /SUPPRESSMSGBOXES /DIR=C:\\Program Files\\Git",
+            PWSTR::NULL,
+            //is shown or not 1 = show 0 = hide
+            0,
+        )
+        };
+        if r.0 < 32 {
+            println!("error: {:?}", r);
+        }
         restart_app();
     } else {
         println!("Git already installed");
@@ -125,6 +139,8 @@ fn remove_node_modules() {
 fn check_if_update_is_needed() -> bool {
     if !check_git_if_installed() {
         install_git();
+    } else {
+        println!("Git already installed");
     }
 
     let output = Command::new("git")
@@ -165,7 +181,7 @@ fn install_modules() {
     let r = unsafe {
         ShellExecuteW(
             HWND::NULL,
-            "Run ",
+            "open",
             "cmd",
             " /c".to_owned() + " " + "npm install --force",
             PWSTR::NULL,
@@ -242,24 +258,38 @@ fn check_node_modules() -> bool {
     }
 }
 
-fn check_node_version() -> bool {
+fn check_version() -> bool {
     let output = Command::new("node")
-        .arg("--version")
+        .arg("-v")
         .output()
         .expect("Failed to execute process");
 
-    if output.status.success() {
-        let output = String::from_utf8_lossy(&output.stdout);
-        if output.contains("v16.15.0") {
-            false
-        } else {
-            uninstall_node();
+    let output = String::from_utf8_lossy(&output.stdout);
+    if output.contains("v16.15.0") {
+        println!("Node.js version is correct");
+        false
+    } else {
+        println!("Node.js version is not correct, installing...");
+        uninstall_node();
+        download_node_installer();
+        true
+    }
+}
+
+fn check_node_version() -> bool {
+    let output = Command::new("node").arg("--version").output();
+
+    match output {
+        Ok(_) => {
+            println!("Node.js is installed");
+            return check_version();
+        }
+
+        Err(_) => {
+            println!("Node.js not found, installing...");
             download_node_installer();
             true
         }
-    } else {
-        download_node_installer();
-        true
     }
 }
 
