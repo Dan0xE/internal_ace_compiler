@@ -1,3 +1,7 @@
+use checks::check_installation::check_git_if_installed;
+use commands::commands::restart_app;
+
+use methods::execution::admin_execute;
 use std::thread::sleep;
 use std::{env::current_dir, fs, fs::File, io::Write, path::Path, process::Command};
 
@@ -5,58 +9,21 @@ mod bindings {
     windows::include_bindings!();
 }
 
+mod commands {
+    pub(crate) mod commands;
+}
+
+mod methods {
+    pub(crate) mod execution;
+}
+
+mod checks {
+    pub(crate) mod check_installation;
+}
+
 use bindings::Windows::Win32::System::SystemServices::PWSTR;
 use bindings::Windows::Win32::UI::Shell::ShellExecuteW;
 use bindings::Windows::Win32::UI::WindowsAndMessaging::HWND;
-
-fn restart_app() {
-    let mut path = current_dir().unwrap();
-    path.push("ace.exe");
-    let path = path.to_str().unwrap();
-    let result = unsafe { ShellExecuteW(HWND::NULL, "open", path, PWSTR::NULL, PWSTR::NULL, 0) };
-    println!("result: {:?}", result);
-
-    //kill current process
-    taskkill();
-}
-
-fn taskkill() {
-    windows::initialize_sta().unwrap();
-    let r = unsafe {
-        ShellExecuteW(
-            HWND::NULL,
-            "runas",
-            "C:\\Windows\\System32\\taskkill.exe",
-            "/PID ".to_owned() + std::process::id().to_string().as_str() + " /T " + "/F",
-            // PWSTR::from(command),
-            PWSTR::NULL,
-            //is shown or not 1 = show 0 = hide
-            0,
-        )
-    };
-    if r.0 < 32 {
-        println!("error: {:?}", r);
-    }
-}
-
-fn admin_execute(command: String) {
-    windows::initialize_sta().unwrap();
-    let r = unsafe {
-        ShellExecuteW(
-            HWND::NULL,
-            "runas",
-            "C:\\Windows\\System32\\cmd.exe",
-            // PWSTR::from(command),
-            "/c".to_string() + " " + &command,
-            PWSTR::NULL,
-            //is shown or not 1 = show 0 = hide
-            0,
-        )
-    };
-    if r.0 < 32 {
-        println!("error: {:?}", r);
-    }
-}
 
 fn install_command(package_name: String) {
     windows::initialize_sta().unwrap();
@@ -102,32 +69,25 @@ fn install_git() {
 
     if !path.exists() {
         println!("Git not found, installing...");
-        download_to_file("
-            https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe
-        ", "git.exe");
-
-        install_command("git.exe".to_string());
-
-        std::thread::sleep(std::time::Duration::from_secs(60));
-
-        fs::remove_file("git.exe").unwrap();
+        download_to_file("https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe", "git.exe");
+        windows::initialize_sta().unwrap();
+        let r = unsafe {
+            ShellExecuteW(
+            HWND::NULL,
+            "open",
+            "cmd",
+            " /c".to_owned() + " " + "git.exe /SILENT /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTARTAPPLICATIONS /SUPPRESSMSGBOXES /DIR=C:\\Program Files\\Git",
+            PWSTR::NULL,
+            //is shown or not 1 = show 0 = hide
+            0,
+        )
+        };
+        if r.0 < 32 {
+            println!("error: {:?}", r);
+        }
         restart_app();
     } else {
         println!("Git already installed");
-    }
-    //copy file to local path and then install
-}
-
-fn check_git_if_installed() -> bool {
-    let output = Command::new("git")
-        .arg("--version")
-        .output()
-        .expect("Failed to execute process");
-
-    if output.status.success() {
-        true
-    } else {
-        false
     }
 }
 
@@ -138,6 +98,8 @@ fn remove_node_modules() {
 fn check_if_update_is_needed() -> bool {
     if !check_git_if_installed() {
         install_git();
+    } else {
+        println!("Git already installed");
     }
 
     let output = Command::new("git")
@@ -195,8 +157,14 @@ fn install_modules() {
         std::thread::sleep(std::time::Duration::from_secs(5));
         counter += 1;
         if counter > 10 {
-            println!("Node modules not installed, trying again");
-            install_modules();
+            println!("Could not create folder, trying again");
+            //this is a bit stupid because its calling itself recursively without a limit
+            //wrapping it in a second counter is also stupid so we just exit the app
+            let mut line = String::new();
+            println!("Press any key to exit");
+            let stdin = std::io::stdin();
+            stdin.read_line(&mut line).unwrap();
+            std::process::exit(0);
         }
     }
 
@@ -255,24 +223,38 @@ fn check_node_modules() -> bool {
     }
 }
 
-fn check_node_version() -> bool {
+fn check_version() -> bool {
     let output = Command::new("node")
-        .arg("--version")
+        .arg("-v")
         .output()
         .expect("Failed to execute process");
 
-    if output.status.success() {
-        let output = String::from_utf8_lossy(&output.stdout);
-        if output.contains("v16.15.0") {
-            false
-        } else {
-            uninstall_node();
+    let output = String::from_utf8_lossy(&output.stdout);
+    if output.contains("v16.15.0") {
+        println!("Node.js version is correct");
+        false
+    } else {
+        println!("Node.js version is not correct, installing...");
+        uninstall_node();
+        download_node_installer();
+        true
+    }
+}
+
+fn check_node_version() -> bool {
+    let output = Command::new("node").arg("--version").output();
+
+    match output {
+        Ok(_) => {
+            println!("Node.js is installed");
+            return check_version();
+        }
+
+        Err(_) => {
+            println!("Node.js not found, installing...");
             download_node_installer();
             true
         }
-    } else {
-        download_node_installer();
-        true
     }
 }
 
