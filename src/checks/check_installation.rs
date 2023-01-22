@@ -24,8 +24,15 @@ pub(crate) fn check_node_installation() -> bool {
         }
 
         Err(_) => {
-            println!("Node.js not found, installing...");
-            download_node_installer();
+            println!("Node.js not found");
+            println!("Would you like to install Node.js? (y/n)");
+            let mut input = String::new();
+            std::io::stdin().read_line(&mut input).unwrap();
+            if input.trim() == "y" {
+                download_node_installer();
+            } else {
+                std::process::exit(0);
+            }
             true
         }
     }

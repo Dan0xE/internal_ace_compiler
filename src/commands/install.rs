@@ -84,9 +84,7 @@ pub(crate) fn install_modules() {
         std::thread::sleep(std::time::Duration::from_secs(5));
         counter += 1;
         if counter > 10 {
-            println!("Could not create folder, trying again");
-            //this is a bit stupid because its calling itself recursively without a limit
-            //wrapping it in a second counter is also stupid so we just exit the app
+            println!("Could not create folder, exiting");
             let mut line = String::new();
             println!("Press any key to exit");
             let stdin = std::io::stdin();
