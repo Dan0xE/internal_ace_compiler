@@ -3,6 +3,7 @@ use crate::bindings::Windows::Win32::{
     UI::{Shell::ShellExecuteW, WindowsAndMessaging::HWND},
 };
 
+/// This command executes a command as admin
 pub(crate) fn admin_execute(command: String) {
     windows::initialize_sta().unwrap();
     let r = unsafe {

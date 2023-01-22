@@ -5,6 +5,7 @@ use crate::bindings::Windows::Win32::{
     UI::{Shell::ShellExecuteW, WindowsAndMessaging::HWND},
 };
 
+/** This command kills the current process */
 pub(crate) fn taskkill() {
     windows::initialize_sta().unwrap();
     let r = unsafe {
@@ -24,6 +25,8 @@ pub(crate) fn taskkill() {
     }
 }
 
+//BUG This command does not work
+/** This command restarts the Application */
 pub(crate) fn restart_app() {
     let mut path = current_dir().unwrap();
     path.push("ace.exe");
@@ -32,4 +35,32 @@ pub(crate) fn restart_app() {
     println!("result: {:?}", result);
 
     taskkill();
+}
+
+/** Starts ACE */
+pub(crate) fn start_ace() {
+    windows::initialize_sta().unwrap();
+    let r = unsafe {
+        ShellExecuteW(
+            HWND::NULL,
+            "open",
+            "cmd",
+            // PWSTR::from(command),
+            " /c".to_owned() + " " + "npm start",
+            PWSTR::NULL,
+            //is shown or not 1 = show 0 = hide
+            0,
+        )
+    };
+    if r.0 < 32 {
+        println!("error: {:?}", r);
+    }
+
+    println!("App started");
+
+    //press any key to exit
+    println!("Press any key to exit");
+    let mut input = String::new();
+    std::io::stdin().read_line(&mut input).unwrap();
+    std::process::exit(0);
 }
