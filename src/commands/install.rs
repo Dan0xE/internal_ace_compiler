@@ -11,25 +11,51 @@ use crate::{
 
 /** This command installs Node **/
 pub(crate) fn install_command(package_name: String) {
-    windows::initialize_sta().unwrap();
-    let r = unsafe {
-        ShellExecuteW(
-            HWND::NULL,
-            "runas",
-            "C:\\WINDOWS\\system32\\msiexec.exe",
-            " /i".to_owned()
-                + current_dir().unwrap().to_str().unwrap()
-                + "\\"
-                + &package_name
-                + " /quiet /norestart /log nodeinstall.log",
-            PWSTR::NULL,
-            //is shown or not 1 = show 0 = hide
-            0,
-        )
-    };
-    println!("Successfully installed {}", package_name);
-    if r.0 < 32 {
-        println!("Error installing package: {:?}", r);
+    println!("Installing {}", package_name);
+    println!("Would you like to install quietly? (No installer Window) (y/n)");
+    let mut line = String::new();
+    std::io::stdin().read_line(&mut line).unwrap();
+    if line.trim() == "y" {
+        windows::initialize_sta().unwrap();
+        let r = unsafe {
+            ShellExecuteW(
+                HWND::NULL,
+                "runas",
+                "C:\\WINDOWS\\system32\\msiexec.exe",
+                " /i".to_owned()
+                    + current_dir().unwrap().to_str().unwrap()
+                    + "\\"
+                    + &package_name
+                    + " /quiet /norestart /log nodeinstall.log",
+                PWSTR::NULL,
+                //is shown or not 1 = show 0 = hide
+                0,
+            )
+        };
+        println!("Successfully installed {}", package_name);
+        if r.0 < 32 {
+            println!("Error installing package: {:?}", r);
+        }
+    } else {
+        windows::initialize_sta().unwrap();
+        let r = unsafe {
+            ShellExecuteW(
+                HWND::NULL,
+                "runas",
+                "C:\\WINDOWS\\system32\\msiexec.exe",
+                " /i".to_owned()
+                    + current_dir().unwrap().to_str().unwrap()
+                    + "\\"
+                    + &package_name
+                    + " /log nodeinstall.log",
+                PWSTR::NULL,
+                //is shown or not 1 = show 0 = hide
+                1,
+            )
+        };
+        if r.0 < 32 {
+            println!("Error installing package: {:?}", r);
+        }
     }
 }
 
@@ -46,22 +72,45 @@ pub(crate) fn install_git() {
             std::process::exit(0);
         }
         download_to_file("https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe", "git.exe");
-        windows::initialize_sta().unwrap();
-        let r = unsafe {
-            ShellExecuteW(
-            HWND::NULL,
-            "open",
-            "cmd",
-            " /c".to_owned() + " " + "git.exe /SILENT /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTARTAPPLICATIONS /SUPPRESSMSGBOXES /DIR=C:\\Program Files\\Git",
-            PWSTR::NULL,
-            //is shown or not 1 = show 0 = hide
-            0,
-        )
-        };
-        if r.0 < 32 {
-            println!("error: {:?}", r);
+
+        println!("Would you like to install git quietly? (No installer Window) (y/n)");
+        let mut line = String::new();
+        std::io::stdin().read_line(&mut line).unwrap();
+        if line.trim() == "y" {
+            windows::initialize_sta().unwrap();
+            let r = unsafe {
+                ShellExecuteW(
+				HWND::NULL,
+				"open",
+				"cmd",
+				" /c".to_owned() + " " + "git.exe /SILENT /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTARTAPPLICATIONS /SUPPRESSMSGBOXES /DIR=C:\\Program Files\\Git",
+				PWSTR::NULL,
+				//is shown or not 1 = show 0 = hide
+				0,
+			)
+            };
+            if r.0 < 32 {
+                println!("error: {:?}", r);
+            }
+            restart_app();
+        } else {
+            windows::initialize_sta().unwrap();
+            let r = unsafe {
+                ShellExecuteW(
+                    HWND::NULL,
+                    "open",
+                    "cmd",
+                    " /c".to_owned() + " " + "git.exe /DIR=C:\\Program Files\\Git",
+                    PWSTR::NULL,
+                    //is shown or not 1 = show 0 = hide
+                    1,
+                )
+            };
+            if r.0 < 32 {
+                println!("error: {:?}", r);
+            }
+            restart_app();
         }
-        restart_app();
     } else {
         println!("Git already installed");
     }
