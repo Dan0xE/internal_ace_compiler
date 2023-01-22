@@ -27,9 +27,9 @@ pub(crate) fn install_command(package_name: String) {
             0,
         )
     };
-    println!("{:?}", r);
+    println!("Successfully installed {}", package_name);
     if r.0 < 32 {
-        println!("error: {:?}", r);
+        println!("Error installing package: {:?}", r);
     }
 }
 
@@ -38,7 +38,13 @@ pub(crate) fn install_git() {
     let path = Path::new("C:\\Program Files\\Git\\bin\\git.exe");
 
     if !path.exists() {
-        println!("Git not found, installing...");
+        println!("Git not found");
+        println!("Would you like to install git? (y/n)");
+        let mut line = String::new();
+        std::io::stdin().read_line(&mut line).unwrap();
+        if line.trim() != "y" {
+            std::process::exit(0);
+        }
         download_to_file("https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe", "git.exe");
         windows::initialize_sta().unwrap();
         let r = unsafe {
@@ -76,7 +82,10 @@ pub(crate) fn install_modules() {
         )
     };
     if r.0 < 32 {
-        println!("error: {:?}", r);
+        println!(
+            "Error occured while trying to install node modules: {:?}",
+            r
+        );
     }
 
     let mut counter = 0;
