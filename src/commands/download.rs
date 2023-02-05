@@ -18,6 +18,8 @@ pub(crate) fn download_to_file(url: &str, file_name: &str) {
 
 /// Downloads the node installer and installs it (sigcheck missing!)
 pub(crate) fn download_node_installer() {
+    println!("Downloading Node.js installer, the app will quit after installation");
+    println!("Please restart the app after installation");
     download_to_file(
         "https://nodejs.org/download/release/v16.15.0/node-v16.15.0-x64.msi",
         "node.msi",

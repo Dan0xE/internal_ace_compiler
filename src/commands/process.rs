@@ -32,8 +32,9 @@ pub(crate) fn restart_app() {
     path.push("ace.exe");
     let path = path.to_str().unwrap();
     let result = unsafe { ShellExecuteW(HWND::NULL, "open", path, PWSTR::NULL, PWSTR::NULL, 1) };
-    println!("result: {:?}", result);
-
+    if result.0 < 32 {
+        println!("error: {:?}", result);
+    }
     taskkill();
 }
 
