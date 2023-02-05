@@ -2,7 +2,7 @@ use std::process::Command;
 
 use crate::commands::{download::download_node_installer, uninstall::uninstall_node};
 
-/** Checks if the node version is correct (ACE cannot compile under Node v18.x) */
+/// Checks if the node version is correct (ACE cannot compile under Node v18.x)
 pub(crate) fn check_node_version() -> bool {
     let output = Command::new("node")
         .arg("-v")
