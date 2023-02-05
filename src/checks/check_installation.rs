@@ -3,8 +3,9 @@ use std::process::Command;
 
 use crate::checks::check_version::check_node_version;
 
-/** Checks if git is installed */
+/// Checks if git is installed
 pub(crate) fn check_git_if_installed() -> bool {
+    // we assume that git is installed in the default directory, maybe we can change this in the future and store some kind of config file
     let output = Command::new("C:\\Program Files\\Git\\bin\\git.exe").output();
 
     match output {
@@ -13,7 +14,7 @@ pub(crate) fn check_git_if_installed() -> bool {
     }
 }
 
-/** Checks if node is installed */
+/// Checks if node is installed
 pub(crate) fn check_node_installation() -> bool {
     let output = Command::new("node").arg("--version").output();
 

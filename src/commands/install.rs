@@ -71,7 +71,7 @@ pub(crate) fn install_git() {
         if line.trim() != "y" {
             std::process::exit(0);
         }
-        download_to_file("https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe", "git.exe");
+        download_to_file("https://github.com/git-for-windows/git/releases/download/v2.38.1.windows.1/Git-2.38.1-64-bit.exe", "git.exe", "8E3F77F7CA96AC3402E8D28B43409F38");
 
         println!("Would you like to install git quietly? (No installer Window) (y/n)");
         let mut line = String::new();
@@ -118,6 +118,14 @@ pub(crate) fn install_git() {
 
 /** Installs node modules */
 pub(crate) fn install_modules() {
+    if !Path::new("package.json").exists() {
+        println!("No package.json file found, exiting");
+        let mut line = String::new();
+        println!("Press any key to exit");
+        let stdin = std::io::stdin();
+        stdin.read_line(&mut line).unwrap();
+        std::process::exit(0);
+    }
     windows::initialize_sta().unwrap();
     let r = unsafe {
         ShellExecuteW(

@@ -50,7 +50,7 @@ pub(crate) fn start_ace() {
             " /c".to_owned() + " " + "npm start",
             PWSTR::NULL,
             //is shown or not 1 = show 0 = hide
-            0,
+            1,
         )
     };
     if r.0 < 32 {
