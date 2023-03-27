@@ -12,11 +12,7 @@ use crate::{
 pub(crate) fn download_to_file(url: &str, file_name: &str, hash: &str) {
     if fs::metadata(file_name).is_ok() {
         println!("File already exists, skipping download");
-        let check = sigcheck::sigcheck(file_name, hash);
-        if !check {
-            panic!("Hash of downloaded file does not match, aborting");
-        }
-        return;
+        sigcheck::sigcheck(file_name, hash).unwrap();
     }
     let mut resp = reqwest::blocking::get(url).unwrap();
     let mut content = Vec::new();
@@ -24,10 +20,7 @@ pub(crate) fn download_to_file(url: &str, file_name: &str, hash: &str) {
     let mut file = File::create(file_name).unwrap();
     file.write_all(&content).unwrap();
 
-    let check = sigcheck::sigcheck(file_name, hash);
-    if !check {
-        panic!("Hash of downloaded file does not match, aborting");
-    }
+    sigcheck::sigcheck(file_name, hash).unwrap();
 
     println!("Downloaded and checked hash of {}", file_name);
 }

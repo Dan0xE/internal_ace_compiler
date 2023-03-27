@@ -23,7 +23,7 @@ pub(crate) fn check_node_installation() -> bool {
             println!("Node.js is installed");
             return check_node_version();
         }
-
+        //instead of returning true here we return if the right node version is installed
         Err(_) => {
             println!("Node.js not found");
             println!("Would you like to install Node.js? (y/n)");

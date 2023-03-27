@@ -28,13 +28,12 @@ pub(crate) fn install_command(package_name: String) {
                     + &package_name
                     + " /quiet /norestart /log nodeinstall.log",
                 PWSTR::NULL,
-                //is shown or not 1 = show 0 = hide
                 0,
             )
         };
         println!("Successfully installed {}", package_name);
         if r.0 < 32 {
-            println!("Error installing package: {:?}", r);
+            eprintln!("Error installing package: {:?}", r);
         }
     } else {
         windows::initialize_sta().unwrap();
@@ -49,12 +48,11 @@ pub(crate) fn install_command(package_name: String) {
                     + &package_name
                     + " /log nodeinstall.log",
                 PWSTR::NULL,
-                //is shown or not 1 = show 0 = hide
                 1,
             )
         };
         if r.0 < 32 {
-            println!("Error installing package: {:?}", r);
+            eprintln!("Error installing package: {:?}", r);
         }
     }
 }
@@ -85,12 +83,11 @@ pub(crate) fn install_git() {
 				"cmd",
 				" /c".to_owned() + " " + "git.exe /SILENT /VERYSILENT /NORESTART /NOCANCEL /SP- /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTARTAPPLICATIONS /SUPPRESSMSGBOXES /DIR=C:\\Program Files\\Git",
 				PWSTR::NULL,
-				//is shown or not 1 = show 0 = hide
 				0,
 			)
             };
             if r.0 < 32 {
-                println!("error: {:?}", r);
+                eprintln!("error - failed to execute command. hresult: {:?}", r);
             }
             restart_app();
         } else {
@@ -102,12 +99,11 @@ pub(crate) fn install_git() {
                     "cmd",
                     " /c".to_owned() + " " + "git.exe /DIR=C:\\Program Files\\Git",
                     PWSTR::NULL,
-                    //is shown or not 1 = show 0 = hide
                     1,
                 )
             };
             if r.0 < 32 {
-                println!("error: {:?}", r);
+                eprintln!("error: {:?}", r);
             }
             restart_app();
         }
@@ -119,7 +115,7 @@ pub(crate) fn install_git() {
 /** Installs node modules */
 pub(crate) fn install_modules() {
     if !Path::new("package.json").exists() {
-        println!("No package.json file found, exiting");
+        eprintln!("No package.json file found, exiting");
         let mut line = String::new();
         println!("Press any key to exit");
         let stdin = std::io::stdin();
@@ -134,12 +130,11 @@ pub(crate) fn install_modules() {
             "cmd",
             " /c".to_owned() + " " + "npm install --force",
             PWSTR::NULL,
-            //is shown or not 1 = show 0 = hide
             0,
         )
     };
     if r.0 < 32 {
-        println!(
+        eprintln!(
             "Error occured while trying to install node modules: {:?}",
             r
         );
@@ -149,8 +144,8 @@ pub(crate) fn install_modules() {
     while !Path::new("node_modules").exists() {
         std::thread::sleep(std::time::Duration::from_secs(5));
         counter += 1;
-        if counter > 10 {
-            println!("Could not create folder, exiting");
+        if counter > 2 {
+            eprintln!("Could not create folder, exiting");
             let mut line = String::new();
             println!("Press any key to exit");
             let stdin = std::io::stdin();
